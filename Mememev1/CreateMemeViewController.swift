@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
+class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
     
     //MARK: Properties
     
@@ -18,7 +18,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 36)!,
         NSAttributedString.Key.strokeWidth:  5
     ]
-    var activeField: UITextField?
 
     //MARK: IBOutlets
     @IBOutlet weak var imageView: UIImageView!
@@ -52,16 +51,17 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @IBAction func pickAnImageFromCamera(_ sender: Any) {
-        let imagePickerController = UIImagePickerController()
-        imagePickerController.delegate = self
-        imagePickerController.sourceType = .camera
-        self.present(imagePickerController, animated: true, completion: nil)
+        pickImageFromSource(.camera)
     }
     
     @IBAction func pickAnImageFromAlbum(_ sender: Any) {
+        pickImageFromSource(.photoLibrary)
+    }
+    
+    func pickImageFromSource(_ type: UIImagePickerController.SourceType) {
         let imagePickerController = UIImagePickerController()
         imagePickerController.delegate = self
-        imagePickerController.sourceType = .photoLibrary
+        imagePickerController.sourceType = type
         self.present(imagePickerController, animated: true, completion: nil)
     }
     
@@ -70,6 +70,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     override func viewDidLoad() {
         super.viewDidLoad()
         imageSelected(flag: false)
+        cameraPickButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
+        topTextField.defaultTextAttributes = memeTextAttributes
+        bottomTextField.defaultTextAttributes = memeTextAttributes
+        topTextField.delegate = self
+        bottomTextField.delegate = self
     }
     
     func imageSelected(flag: Bool) {
@@ -85,12 +90,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        cameraPickButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
-        topTextField.defaultTextAttributes = memeTextAttributes
-        bottomTextField.defaultTextAttributes = memeTextAttributes
-        topTextField.delegate = self
-        bottomTextField.delegate = self
-        
         subscribeToKeyboardNotifications()
     }
     
@@ -119,14 +118,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         return true
     }
     
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        activeField = textField
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        activeField = nil
-    }
-    
     //MARK: Notifications
     
     func subscribeToKeyboardNotifications() {
@@ -144,10 +135,8 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
     
     @objc func keyboardWillShow(_ notification:Notification) {
-        if let activeField = activeField {
-            if activeField == bottomTextField {
-                view.frame.origin.y -= getKeyboardHeight(notification)
-            }
+        if bottomTextField.isEditing {
+            view.frame.origin.y -= getKeyboardHeight(notification)
         }
     }
     
@@ -168,19 +157,19 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     }
 
     func generateMemedImage() -> UIImage {
-        toolbarView.isHidden = true
-        topBarView.isHidden = true
-        
+        hideToolbars(true)
         // Render view to an image
         UIGraphicsBeginImageContext(self.view.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
         let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
-        
-        toolbarView.isHidden = false
-        topBarView.isHidden = false
-        
+        hideToolbars(false)
         return memedImage
+    }
+
+    func hideToolbars(_ flag: Bool) {
+        toolbarView.isHidden = flag
+        topBarView.isHidden = flag
     }
 }
 
