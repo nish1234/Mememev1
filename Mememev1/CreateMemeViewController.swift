@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  CreateMemeViewController.swift
 //  Mememev1
 //
 //  Created by Nishtha Behal on 21/04/19.
@@ -12,11 +12,14 @@ class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegat
     
     //MARK: Properties
     
+    private let defaultTopText = "TOP"
+    private let defaultBottomText = "BOTTOM"
+    
     let memeTextAttributes: [NSAttributedString.Key: Any] = [
         NSAttributedString.Key.strokeColor: UIColor.black,
         NSAttributedString.Key.foregroundColor: UIColor.white,
         NSAttributedString.Key.font: UIFont(name: "HelveticaNeue-CondensedBlack", size: 36)!,
-        NSAttributedString.Key.strokeWidth:  5
+        NSAttributedString.Key.strokeWidth:  -3.6
     ]
 
     //MARK: IBOutlets
@@ -71,10 +74,15 @@ class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegat
         super.viewDidLoad()
         imageSelected(flag: false)
         cameraPickButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
-        topTextField.defaultTextAttributes = memeTextAttributes
-        bottomTextField.defaultTextAttributes = memeTextAttributes
-        topTextField.delegate = self
-        bottomTextField.delegate = self
+        configure(topTextField, with: defaultTopText)
+        configure(bottomTextField, with: defaultBottomText)
+    }
+    
+    func configure(_ textField: UITextField, with defaultText: String) {
+        textField.delegate = self
+        textField.defaultTextAttributes = memeTextAttributes
+        textField.text = defaultText
+        textField.textAlignment = .center
     }
     
     func imageSelected(flag: Bool) {
@@ -82,8 +90,8 @@ class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegat
         topTextField.isEnabled = flag
         bottomTextField.isEnabled = flag
         if (!flag) {
-            topTextField.text = "TOP"
-            bottomTextField.text = "BOTTOM"
+            topTextField.text = defaultTopText
+            bottomTextField.text = defaultBottomText
             imageView.image = nil
         }
     }
@@ -136,7 +144,7 @@ class CreateMemeViewController: UIViewController, UIImagePickerControllerDelegat
     
     @objc func keyboardWillShow(_ notification:Notification) {
         if bottomTextField.isEditing {
-            view.frame.origin.y -= getKeyboardHeight(notification)
+            view.frame.origin.y = getKeyboardHeight(notification) * (-1)
         }
     }
     
